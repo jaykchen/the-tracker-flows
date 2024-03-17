@@ -405,19 +405,19 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
     Ok(all_issues)
 }
 
-pub async fn upload_to_gist(content: &str) -> anyhow::Result<()> {
-    let octocrab = get_octo(&GithubLogin::Default);
+// pub async fn upload_to_gist(content: &str) -> anyhow::Result<()> {
+//     let octocrab = get_octo(&GithubLogin::Default);
 
-    let filename = format!("gh_search_{}.txt", Utc::now().format("%d-%m-%Y"));
+//     let filename = format!("gh_search_{}.txt", Utc::now().format("%d-%m-%Y"));
 
-    let _ = octocrab
-        .gists()
-        .create()
-        .description("Daily Tracking Report")
-        .public(false) // set to true if you want the gist to be public
-        .file(filename, content)
-        .send()
-        .await?;
+//     let _ = octocrab
+//         .gists()
+//         .create()
+//         .description("Daily Tracking Report")
+//         .public(false) // set to true if you want the gist to be public
+//         .file(filename, content)
+//         .send()
+//         .await?;
 
-    Ok(())
-}
+//     Ok(())
+// }
