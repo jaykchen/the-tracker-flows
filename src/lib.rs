@@ -54,7 +54,7 @@ pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     for pull in pulls {
         log::error!("pulls: {:?}", pull);
         let content = format!("{:?}", pull);
-        let _ = upload_to_gist(&content).await?;
+        // let _ = upload_to_gist(&content).await?;
         break;
     }
 
