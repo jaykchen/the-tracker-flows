@@ -1,4 +1,4 @@
-use chrono::{Datelike, NaiveDate, Timelike, Utc};
+use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
 use github_flows::{get_octo, GithubLogin};
@@ -11,23 +11,12 @@ use serde_json::{json, to_string_pretty, Value};
 use std::env;
 
 use anyhow::anyhow;
-use chrono::Duration;
 use http_req::{
     request::{Method, Request},
     uri::Uri,
 };
 use serde::{Deserialize, Serialize};
 
-use chrono::{Duration, NaiveDate, Utc};
-
-use anyhow::anyhow;
-use std::env;
-
-use http_req::{
-    request::{Method, Request},
-    uri::Uri,
-};
-use serde::{Deserialize, Serialize};
 use std::io::Write;
 
 pub fn inner_query_by_date_range(

@@ -6,6 +6,7 @@ use github_flows::{get_octo, GithubLogin};
 use octocrab_wasi::{
     models::{issues::Issue, pulls},
     params::{issues::Sort, Direction},
+    search,
 };
 use openai_flows::{
     chat::{ChatModel, ChatOptions},
@@ -29,29 +30,32 @@ pub async fn on_deploy() {
 
 #[schedule_handler]
 async fn handler(body: Vec<u8>) {
-    let _ = inner(body).await;
+    let _ = search_issue_init().await;
 }
 
 pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     let query = "repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-03 review:approved -label:spam -label:invalid";
 
-    let octocrab = get_octo(&GithubLogin::Default);
+    // let octocrab = get_octo(&GithubLogin::Default);
 
     // let pulls = octocrab
     //     .search()
     //     .issues_and_pull_requests(&query)
     //     .send()
     //     .await?;
-    let pulls = octocrab
-        .repos("SarthakKeshari", "calc_for_everything")
-        .list_stargazers()
-        .send()
-        .await?;
+    // let pulls = octocrab
+    //     .repos("SarthakKeshari", "calc_for_everything")
+    //     .list_stargazers()
+    //     .send()
+    //     .await?;
 
-    for pull in pulls.items {
+    let pulls = search_issues_open(&query).await?;
+
+    for pull in pulls {
         log::error!("pulls: {:?}", pull);
         let content = format!("{:?}", pull);
         let _ = upload_to_gist(&content).await?;
+        break;
     }
 
     let _ = send_message_to_channel("ik8", "general", "text".to_string()).await;
