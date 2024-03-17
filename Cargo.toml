@@ -9,11 +9,6 @@ path = "src/lib.rs"
 
 [dependencies]
 tokio_wasi = { version = "1", features = ["macros"] }
-sqlx = { git = "https://github.com/launchbadge/sqlx.git", rev = "431e90b5d0f3b9bffc7eb2cf82ba3119b37cb07c", features = [
-    "postgres",
-    "runtime-tokio-rustls",
-    "macros",
-] }
 anyhow = "1.0.80"
 dotenv = "0.15.0"
 

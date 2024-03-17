@@ -1,4 +1,3 @@
-pub mod db_updater;
 pub mod issues_tracker;
 use chrono::{Datelike, NaiveDate, Timelike, Utc};
 use dotenv::dotenv;
@@ -16,10 +15,8 @@ use schedule_flows::{schedule_cron_job, schedule_handler};
 use slack_flows::send_message_to_channel;
 
 use chrono::Duration;
-pub use db_updater::*;
 pub use issues_tracker::*;
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgPool;
 
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
@@ -32,7 +29,7 @@ pub async fn on_deploy() {
 
 #[schedule_handler]
 async fn handler(body: Vec<u8>) {
-    let _   = inner(body).await;
+    let _ = inner(body).await;
 }
 
 pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
@@ -57,7 +54,7 @@ pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
         let _ = upload_to_gist(&content).await?;
     }
 
-    let _=   send_message_to_channel("ik8", "general", "text".to_string()).await;
+    let _ = send_message_to_channel("ik8", "general", "text".to_string()).await;
 
     // let pulls = get_per_repo_pull_requests(&query).await?;
     // for pull in pulls {
@@ -103,30 +100,28 @@ pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
 } */
 
 pub async fn search_issue_init() -> anyhow::Result<()> {
-    let start_date =
-        NaiveDate::parse_from_str("2023-10-01", "%Y-%m-%d").expect("Failed to parse date");
-
-    let mut date_point_vec = Vec::new();
-
-    for i in 0..20 {
-        let three_days_str = (start_date + Duration::days(2 * i as i64))
-            .format("%Y-%m-%d")
-            .to_string();
-
-        date_point_vec.push(three_days_str);
-    }
-
-    let mut date_range_vec = date_point_vec
-        .windows(2)
-        .map(|x| x.join(".."))
-        .collect::<Vec<_>>();
+    let start_date = "2023-10-01";
+    let issue_label = "hacktoberfest";
+    let pr_label = "hacktoberfest-accepted";
+    let n_days = 2;
+    let is_issue = true;
+    let is_start = true;
+    let query_vec = inner_query_by_date_range(
+        start_date,
+        n_days,
+        issue_label,
+        pr_label,
+        is_issue,
+        is_start,
+    );
 
     let mut texts = String::new();
-    for date_range in date_range_vec {
-        let query =
-            format!("label:hacktoberfest-accepted is:pr is:merged created:{date_range} review:approved -label:spam -label:invalid");
-        let label_to_watch = "hacktoberfest";
-        let pulls = get_pull_requests(&query, label_to_watch).await?;
+    for query in query_vec {
+        //     let query =
+        //         format!("label:hacktoberfest-accepted is:pr is:merged created:{date_range} review:approved -label:spam -label:invalid");
+        //     let query ="label:hacktoberfest is:issue is:open no:assignee created:{date_range} review:approved -label:spam -label:invalid");
+        //     let label_to_watch = "hacktoberfest";
+        let pulls = search_issues_open(&query).await?;
 
         for pull in pulls {
             log::info!("pull: {:?}", pull.url);
@@ -138,62 +133,3 @@ pub async fn search_issue_init() -> anyhow::Result<()> {
     let _ = upload_to_gist(&texts).await?;
     Ok(())
 }
-
-/* pub async fn github_to_db() -> anyhow::Result<()> {
-    let start_date =
-        NaiveDate::parse_from_str("2023-10-01", "%Y-%m-%d").expect("Failed to parse date");
-
-    let mut date_point_vec = Vec::new();
-
-    for i in 0..20 {
-        let three_days_str = (start_date + Duration::days(2 * i as i64))
-            .format("%Y-%m-%d")
-            .to_string();
-
-        date_point_vec.push(three_days_str);
-    }
-
-    let mut date_range_vec = date_point_vec
-        .windows(2)
-        .map(|x| x.join(".."))
-        .collect::<Vec<_>>();
-
-    let pool = PgPool::connect(&env::var("DATABASE_URL")?).await?;
-
-    for date_range in date_range_vec {
-        let query =
-            format!("label:hacktoberfest-accepted is:pr is:merged created:{date_range} review:approved -label:spam -label:invalid");
-        println!("query: {:?}", query.clone());
-        let label_to_watch = "hacktoberfest-accepted";
-        let pulls = get_pull_requests(&query, label_to_watch).await?;
-
-        for pull in pulls {
-            println!("pull: {:?}", pull.url);
-            println!("pull: {:?}", pull.repository);
-
-            let _ = add_pull_request_with_check(
-                &pool,
-                &pull.url,
-                &pull.title,
-                &pull.author,
-                &pull.repository,
-                &pull.merged_by,
-                pull.cross_referenced_issues,
-            )
-            .await?;
-
-            // pub async fn add_pull_request_with_check(
-            //     pool: &sqlx::PgPool,
-            //     pull_id: &str,
-            //     title: &str,
-            //     author: &str,
-            //     repository: &str,
-            //     merged_by: &str,
-            //     cross_referenced_issues: Vec<String>,
-            // let body = issue.body.chars().take(200).collect::<String>();
-            // let title = issue.title.chars().take(200).collect::<String>();
-            // let _ = (&pool, &issue.url, &title, &body).await?;
-        }
-    }
-    Ok(())
-} */
