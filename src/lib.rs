@@ -1,23 +1,10 @@
 pub mod db_updater;
-pub mod issues_tracker;
 use chrono::{Datelike, NaiveDate, Timelike, Utc};
+pub use db_updater::*;
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
 use github_flows::{get_octo, GithubLogin};
-use octocrab_wasi::{
-    models::{issues::Issue, pulls},
-    params::{issues::Sort, Direction},
-};
-use openai_flows::{
-    chat::{ChatModel, ChatOptions},
-    OpenAIFlows,
-};
 use schedule_flows::{schedule_cron_job, schedule_handler};
-use slack_flows::send_message_to_channel;
-
-use chrono::Duration;
-pub use db_updater::*;
-pub use issues_tracker::*;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPool;
 
@@ -40,24 +27,12 @@ pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
 
     let octocrab = get_octo(&GithubLogin::Default);
 
-    // let pulls = octocrab
-    //     .search()
-    //     .issues_and_pull_requests(&query)
-    //     .send()
-    //     .await?;
-    let pulls = octocrab
-        .repos("SarthakKeshari", "calc_for_everything")
-        .list_stargazers()
-        .send()
-        .await?;
+    let pulls = octocrab.issues("SarthakKeshari", "calc_for_everything").list_i().send().await?;
 
     for pull in pulls.items {
         log::error!("pulls: {:?}", pull);
         let content = format!("{:?}", pull);
-        let _ = upload_to_gist(&content).await?;
     }
-
-    let _=   send_message_to_channel("ik8", "general", "text".to_string()).await;
 
     // let pulls = get_per_repo_pull_requests(&query).await?;
     // for pull in pulls {
@@ -66,24 +41,17 @@ pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
 
     Ok(())
 }
-/* pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
+pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     dotenv().ok();
     logger::init();
 
     // let _ = search_for_initial_hits().await;
     let pool = PgPool::connect(&env::var("DATABASE_URL")?).await?;
 
-    let issue_id = "https://github.com/jaykchen/issue-labeler/issues/24";
+    // let issue_id = "https://github.com/jaykchen/issue-labeler/issues/24";
 
-    let res = list_comments(&pool, issue_id).await?;
-    log::info!("Comments: {:?}", res);
+    // log::info!("Comments: {:?}", res);
 
-    Ok(())
-} */
-
-/* async fn run_db() -> anyhow::Result<()> {
-    dotenv::dotenv().ok();
-    let pool = PgPool::connect(&env::var("DATABASE_URL")?).await?;
 
     let _ = add_project_test_1(&pool).await?;
     //
@@ -95,49 +63,10 @@ pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     let _ = add_issue_test_1(&pool).await?;
     let _ = add_comment_test_1(&pool).await?;
 
-    let issue_id = "https://github.com/jaykchen/issue-labeler/issues/24";
-
-    let res = list_comments(&pool, issue_id).await?;
-    println!("Comments: {:?}", res);
-    Ok(())
-} */
-
-pub async fn search_issue_init() -> anyhow::Result<()> {
-    let start_date =
-        NaiveDate::parse_from_str("2023-10-01", "%Y-%m-%d").expect("Failed to parse date");
-
-    let mut date_point_vec = Vec::new();
-
-    for i in 0..20 {
-        let three_days_str = (start_date + Duration::days(2 * i as i64))
-            .format("%Y-%m-%d")
-            .to_string();
-
-        date_point_vec.push(three_days_str);
-    }
-
-    let mut date_range_vec = date_point_vec
-        .windows(2)
-        .map(|x| x.join(".."))
-        .collect::<Vec<_>>();
-
-    let mut texts = String::new();
-    for date_range in date_range_vec {
-        let query =
-            format!("label:hacktoberfest-accepted is:pr is:merged created:{date_range} review:approved -label:spam -label:invalid");
-        let label_to_watch = "hacktoberfest";
-        let pulls = get_pull_requests(&query, label_to_watch).await?;
-
-        for pull in pulls {
-            log::info!("pull: {:?}", pull.url);
-            texts.push_str(&format!("{}\n", pull.url));
-            break;
-        }
-    }
-
-    let _ = upload_to_gist(&texts).await?;
     Ok(())
 }
+
+
 
 /* pub async fn github_to_db() -> anyhow::Result<()> {
     let start_date =
