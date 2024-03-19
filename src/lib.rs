@@ -37,14 +37,17 @@ async fn handler(body: Vec<u8>) {
 
 pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     // let query = "repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-03 review:approved -label:spam -label:invalid";
-    let query = "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid";
+    // let query = "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid";
 
-    let issues = search_issues_open(&query).await?;
+    // let issues = search_issues_open(&query).await?;
+    let query = "repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-30 review:approved -label:spam -label:invalid";
+    let pulls = get_per_repo_pull_requests(&query).await?;
+
 
     let mut count = 0;
-    for iss in issues {
+    for iss in pulls {
         count += 1;
-        log::error!("issues: {:?}", iss);
+        log::error!("pull: {:?}", iss);
         let content = format!("{:?}", iss);
         let _ = upload_to_gist(&content).await?;
         if count > 5 {
