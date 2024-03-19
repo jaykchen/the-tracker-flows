@@ -1,8 +1,13 @@
-use chrono::{Datelike, NaiveDate, Timelike, Utc, Duration};
+use anyhow::anyhow;
+use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
 use dotenv::dotenv;
-use std::env;
 use flowsnet_platform_sdk::logger;
 use github_flows::{get_octo, GithubLogin};
+use http_req::{
+    request::{Method, Request},
+    response::Response,
+    uri::Uri,
+};
 use octocrab_wasi::{
     models::{issues::Issue, pulls},
     params::{issues::Sort, Direction},
@@ -13,9 +18,8 @@ use openai_flows::{
     OpenAIFlows,
 };
 use schedule_flows::{schedule_cron_job, schedule_handler};
-use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
-use http_req::{request::{Request, Method}, response::Response, uri::Uri};
+use std::env;
 
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
@@ -33,6 +37,7 @@ async fn handler(body: Vec<u8>) {
 
 pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     let query = "repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-03 review:approved -label:spam -label:invalid";
+    let query = "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid";
 
     let issues = search_issues_open(&query).await?;
 
@@ -42,7 +47,6 @@ pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
         // let _ = upload_to_gist(&content).await?;
         break;
     }
-
 
     Ok(())
 }
@@ -170,7 +174,6 @@ pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
 
 //     Ok(())
 // }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct OuterIssue {
@@ -394,7 +397,8 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
                             title: issue.title.unwrap_or_default(),
                             url: issue.url.unwrap_or_default(),
                             author: issue
-                                .author.clone()
+                                .author
+                                .clone()
                                 .map_or(String::new(), |author| author.login.unwrap_or_default()),
                             body: issue.body.clone().unwrap_or_default(),
                             repository: issue
@@ -405,12 +409,11 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
                                 repo.stargazers
                                     .map_or(0, |stars| stars.totalCount.unwrap_or(0))
                             }),
-                            repository_avatar: issue
-                                .repository
-                                .map_or(String::new(), |repo| {
-                                    repo.owner
-                                        .map_or(String::new(), |owner| owner.avatarUrl.unwrap_or_default())
-                                }),
+                            repository_avatar: issue.repository.map_or(String::new(), |repo| {
+                                repo.owner.map_or(String::new(), |owner| {
+                                    owner.avatarUrl.unwrap_or_default()
+                                })
+                            }),
                             issue_labels: labels,
                             comments: comments,
                         });
