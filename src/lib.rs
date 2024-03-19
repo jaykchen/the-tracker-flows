@@ -1,22 +1,12 @@
 use anyhow::anyhow;
-use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
+use chrono::{ Duration, NaiveDate, Datelike, Timelike, Utc};
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
-use github_flows::{get_octo, GithubLogin};
 use http_req::{
     request::{Method, Request},
-    response::Response,
     uri::Uri,
 };
-use octocrab_wasi::{
-    models::{issues::Issue, pulls},
-    params::{issues::Sort, Direction},
-    search,
-};
-use openai_flows::{
-    chat::{ChatModel, ChatOptions},
-    OpenAIFlows,
-};
+
 use schedule_flows::{schedule_cron_job, schedule_handler};
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -31,11 +21,12 @@ pub async fn on_deploy() {
 }
 
 #[schedule_handler]
-async fn handler(body: Vec<u8>) {
-    let _ = inner(body).await;
+async fn handler(_body: Vec<u8>) {
+    dotenv().ok();
+    let _ = inner(_body).await;
 }
 
-pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
+pub async fn inner(_body: Vec<u8>) -> anyhow::Result<()> {
     let query = "repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-03 review:approved -label:spam -label:invalid";
     let query = "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid";
 
@@ -281,16 +272,8 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
         body: Option<String>,
     }
 
-    let first_comments = 10;
-    let first_timeline_items = 10;
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
-    let file_path = "issues.txt";
-    let mut file = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(file_path)?;
-    let mut count = 0;
 
     for _ in 0..10 {
         let query_str = format!(
