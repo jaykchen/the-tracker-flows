@@ -6,6 +6,7 @@ resolver = "2"
 
 [lib]
 path = "src/lib.rs"
+crate-type = ["cdylib"]
 
 [dependencies]
 tokio_wasi = { version = "1", features = ["macros", "rt"] }
