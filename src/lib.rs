@@ -2,10 +2,17 @@ use anyhow::anyhow;
 use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
+use github_flows::{get_octo, GithubLogin};
 use http_req::{
     request::{Method, Request},
+    response::Response,
     uri::Uri,
 };
+// use octocrab_wasi::{
+//     models::{issues::Issue, pulls},
+//     params::{issues::Sort, Direction},
+//     search,
+// };
 
 use schedule_flows::{schedule_cron_job, schedule_handler};
 use serde::{Deserialize, Serialize};
@@ -21,25 +28,106 @@ pub async fn on_deploy() {
 }
 
 #[schedule_handler]
-async fn handler(_body: Vec<u8>) {
+async fn handler(body: Vec<u8>) {
     dotenv().ok();
-    let _ = inner(_body).await;
+    let _ = inner(body).await;
 }
 
-pub async fn inner(_body: Vec<u8>) -> anyhow::Result<()> {
+pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     // let query = "repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-03 review:approved -label:spam -label:invalid";
     let query = "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid";
 
     let issues = search_issues_open(&query).await?;
 
+    let mut count = 0;
     for iss in issues {
-        log::info!("issues: {:?}", iss);
-        // let content = format!("{:?}", iss);
-        // let _ = upload_to_gist(&content).await?;
-        break;
+        count += 1;
+        log::error!("issues: {:?}", iss);
+        let content = format!("{:?}", iss);
+        let _ = upload_to_gist(&content).await?;
+        if count > 5 {
+            break;
+        }
     }
 
     Ok(())
+}
+
+pub async fn search_issue_init() -> anyhow::Result<()> {
+    let start_date = "2023-10-01";
+    let issue_label = "hacktoberfest";
+    let pr_label = "hacktoberfest-accepted";
+    let n_days = 2;
+    let is_issue = true;
+    let is_start = true;
+    let query_vec = inner_query_by_date_range(
+        start_date,
+        n_days,
+        issue_label,
+        pr_label,
+        is_issue,
+        is_start,
+    );
+
+    let mut texts = String::new();
+    for query in query_vec {
+        //     let query =
+        //         format!("label:hacktoberfest-accepted is:pr is:merged created:{date_range} review:approved -label:spam -label:invalid");
+        //     let query ="label:hacktoberfest is:issue is:open no:assignee created:{date_range} review:approved -label:spam -label:invalid");
+        //     let label_to_watch = "hacktoberfest";
+        let pulls = search_issues_open(&query).await?;
+
+        for pull in pulls {
+            log::info!("pull: {:?}", pull.url);
+            texts.push_str(&format!("{}\n", pull.url));
+            break;
+        }
+    }
+
+    // let _ = upload_to_gist(&texts).await?;
+    Ok(())
+}
+
+pub fn inner_query_by_date_range(
+    start_date: &str,
+    n_days: i64,
+    issue_label: &str,
+    pr_label: &str,
+    is_issue: bool,
+    is_start: bool,
+) -> Vec<String> {
+    // let start_date ="2023-10-01";
+    // let issue_label = "hacktoberfest";
+    // let pr_label = "hacktoberfest-accepted";
+    let start_date =
+        NaiveDate::parse_from_str(start_date, "%Y-%m-%d").expect("Failed to parse date");
+
+    let date_point_vec = (0..20)
+        .map(|i| {
+            (start_date + Duration::days(n_days * i as i64))
+                .format("%Y-%m-%d")
+                .to_string()
+        })
+        .collect::<Vec<_>>();
+
+    let date_range_vec = date_point_vec
+        .windows(2)
+        .map(|x| x.join(".."))
+        .collect::<Vec<_>>();
+
+    let mut out = Vec::new();
+    for date_range in date_range_vec {
+        let query = if is_issue && is_start {
+            format!("label:{issue_label} is:issue is:open no:assignee created:{date_range} -label:spam -label:invalid")
+        } else if is_issue && !is_start {
+            format!("label:{issue_label} is:issue is:closed created:{date_range} -label:spam -label:invalid")
+        } else {
+            format!("label:{pr_label} is:pr is:merged created:{date_range} review:approved -label:spam -label:invalid")
+        };
+        out.push(query);
+    }
+
+    out
 }
 
 pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
@@ -70,6 +158,23 @@ pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
             Err(anyhow::anyhow!(_e))
         }
     }
+}
+
+pub async fn upload_to_gist(content: &str) -> anyhow::Result<()> {
+    let octocrab = get_octo(&GithubLogin::Default);
+
+    let filename = format!("gh_search_{}.txt", Utc::now().format("%H:%M:%S%.f"));
+
+    let _ = octocrab
+        .gists()
+        .create()
+        .description("Daily Tracking Report")
+        .public(false) // set to true if you want the gist to be public
+        .file(filename, content)
+        .send()
+        .await?;
+
+    Ok(())
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -178,8 +283,16 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
         body: Option<String>,
     }
 
+    let first_comments = 10;
+    let first_timeline_items = 10;
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
+    let file_path = "issues.txt";
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(file_path)?;
+    let mut count = 0;
 
     for _ in 0..10 {
         let query_str = format!(
@@ -232,7 +345,7 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
                 }}
             }}
             "#,
-            query,
+            query.replace("\"", "\\\""),
             after_cursor
                 .as_ref()
                 .map_or(String::from("null"), |c| format!("\"{}\"", c)),
