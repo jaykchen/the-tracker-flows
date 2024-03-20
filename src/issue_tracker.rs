@@ -2,17 +2,11 @@ use anyhow::anyhow;
 use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
-use github_flows::{get_octo, GithubLogin};
 use http_req::{
     request::{Method, Request},
     response::Response,
     uri::Uri,
 };
-// use octocrab_wasi::{
-//     models::{issues::Issue, pulls},
-//     params::{issues::Sort, Direction},
-//     search,
-// };
 
 use schedule_flows::{schedule_cron_job, schedule_handler};
 use serde::{Deserialize, Serialize};
@@ -91,22 +85,7 @@ pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
     }
 }
 
-pub async fn upload_to_gist(content: &str) -> anyhow::Result<()> {
-    let octocrab = get_octo(&GithubLogin::Default);
 
-    let filename = format!("gh_search_{}.txt", Utc::now().format("%H:%M:%S%.f"));
-
-    let _ = octocrab
-        .gists()
-        .create()
-        .description("Daily Tracking Report")
-        .public(false) // set to true if you want the gist to be public
-        .file(filename, content)
-        .send()
-        .await?;
-
-    Ok(())
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct OuterIssue {
