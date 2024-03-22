@@ -1,8 +1,7 @@
 pub mod db_updater;
 pub mod issue_tracker;
 pub mod the_runner;
-use anyhow::anyhow;
-use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use db_updater::*;
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
@@ -12,6 +11,7 @@ use http_req::{
     uri::Uri,
 };
 use issue_tracker::*;
+use lazy_static::lazy_static;
 use schedule_flows::{schedule_cron_job, schedule_handler};
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -19,6 +19,16 @@ use the_runner::*;
 
 pub static ISSUE_LABEL: &str = "hacktoberfest";
 pub static PR_LABEL: &str = "hacktoberfest-accepted";
+pub static START_DATE: &str = "2023-10-01";
+pub static END_DATE: &str = "2023-10-30";
+
+lazy_static! {
+    static ref TODAY_PLUS_TEN_MINUTES: NaiveDateTime = Utc::now()
+        .date()
+        .naive_utc()
+        .and_time(NaiveTime::from_hms(0, 10, 0));
+    static ref TODAY_THIS_HOUR: u32 = Utc::now().hour();
+}
 
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]

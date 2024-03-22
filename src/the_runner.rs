@@ -1,8 +1,8 @@
 use crate::db_updater::*;
 use crate::issue_tracker::*;
-use crate::ISSUE_LABEL;
-use crate::PR_LABEL;
-use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
+use crate::{END_DATE, ISSUE_LABEL, PR_LABEL, START_DATE, TODAY_PLUS_TEN_MINUTES, TODAY_THIS_HOUR};
+
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike, Utc};
 use flowsnet_platform_sdk::logger;
 
 pub fn inner_query_n_days(
@@ -76,6 +76,15 @@ pub fn inner_query_vec_by_date_range(
     }
 
     out
+}
+
+pub async fn top_runner() {
+    let now = Utc::now().naive_utc();
+
+    if now < *TODAY_PLUS_TEN_MINUTES {
+        let _ = run_daily(START_DATE).await;
+    }
+    let _ = run_hourly(START_DATE).await;
 }
 pub async fn run_hourly(start_date: &str) {
     // let start_date = "2023-10-01";
