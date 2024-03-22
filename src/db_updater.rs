@@ -1,8 +1,6 @@
-use anyhow::Result;
 use dotenv::dotenv;
-use mysql_async::Error;
+use mysql_async::prelude::*;
 pub use mysql_async::*;
-use mysql_async::{prelude::*, Pool};
 
 async fn get_pool() -> Pool {
     dotenv().ok();
@@ -17,10 +15,7 @@ async fn get_pool() -> Pool {
     Pool::new(builder.pool_opts(pool_opts))
 }
 
-pub async fn project_exists(
-    pool: &mysql_async::Pool,
-    project_id: &str,
-) -> Result<bool, mysql_async::Error> {
+pub async fn project_exists(pool: &mysql_async::Pool, project_id: &str) -> Result<bool> {
     let mut conn = pool.get_conn().await?;
     let result: Option<(i32,)> = conn
         .query_first(format!(
@@ -60,7 +55,7 @@ pub async fn update_project(
     pool: &mysql_async::Pool,
     project_id: &str,
     issue_id: &str,
-) -> Result<(), Error> {
+) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let issue_id_json: Value = serde_json::json!(issue_id).into();
@@ -78,8 +73,6 @@ pub async fn update_project(
 
     Ok(())
 }
-
-use mysql_async::prelude::Queryable;
 
 pub async fn test_project_exists() {
     let pool = get_pool().await;

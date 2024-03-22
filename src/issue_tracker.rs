@@ -1,14 +1,11 @@
 use anyhow::anyhow;
 use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
-use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
 use http_req::{
     request::{Method, Request},
-    response::Response,
     uri::Uri,
 };
 
-use schedule_flows::{schedule_cron_job, schedule_handler};
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -173,11 +170,6 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
     let file_path = "issues.txt";
-    let mut file = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(file_path)?;
-    let mut count = 0;
 
     for _ in 0..10 {
         let query_str = format!(
@@ -468,12 +460,6 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<CloseOuterI
     let first_timeline_items = 10;
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
-    let file_path = "issues.txt";
-    let mut file = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(file_path)?;
-    let mut count = 0;
 
     for _ in 0..10 {
         let query_str = format!(

@@ -1,19 +1,9 @@
 use crate::db_updater::*;
 use crate::issue_tracker::*;
-use anyhow::anyhow;
-use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
-use dotenv::dotenv;
-use flowsnet_platform_sdk::logger;
-use http_req::{
-    request::{Method, Request},
-    response::Response,
-    uri::Uri,
-};
-
 use crate::ISSUE_LABEL;
 use crate::PR_LABEL;
-use serde::{Deserialize, Serialize};
-use std::env;
+use chrono::{Datelike, Duration, NaiveDate, Timelike, Utc};
+use flowsnet_platform_sdk::logger;
 
 pub fn inner_query_n_days(
     start_date: &str,
