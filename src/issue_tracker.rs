@@ -46,7 +46,7 @@ pub async fn search_issues_w_update_comments() {
     todo!("Implement this function");
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[allow(non_snake_case)]
 pub struct OuterIssue {
     pub title: String,
     pub url: String,
@@ -60,16 +60,19 @@ pub struct OuterIssue {
 }
 
 pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> {
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct GraphQLResponse {
         data: Option<Data>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Data {
         search: Option<Search>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Search {
         issueCount: Option<i32>,
@@ -77,17 +80,20 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
         pageInfo: PageInfo,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct PageInfo {
         endCursor: Option<String>,
         hasNextPage: bool,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Edge {
         node: Option<Issue>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Issue {
         title: Option<String>,
@@ -99,16 +105,19 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
         comments: Option<Comments>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Author {
         login: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Owner {
         avatarUrl: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Repository {
         url: Option<String>,
@@ -116,36 +125,43 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
         owner: Option<Owner>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Stargazers {
         totalCount: Option<i64>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Labels {
         edges: Option<Vec<LabelEdge>>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct LabelEdge {
         node: Option<Label>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Label {
         name: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Comments {
         edges: Option<Vec<CommentEdge>>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct CommentEdge {
         node: Option<Comment>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Comment {
         author: Option<Author>,
@@ -302,6 +318,7 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
     Ok(all_issues)
 }
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CloseOuterIssue {
     pub title: String,
@@ -318,16 +335,19 @@ pub struct CloseOuterIssue {
 }
 
 pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<CloseOuterIssue>> {
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct GraphQLResponse {
         data: Option<Data>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Data {
         search: Option<Search>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Search {
         issueCount: Option<i32>,
@@ -335,17 +355,20 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<CloseOuterI
         pageInfo: PageInfo,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct PageInfo {
         endCursor: Option<String>,
         hasNextPage: bool,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Edge {
         node: Option<Issue>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Issue {
         title: Option<String>,
@@ -358,69 +381,82 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<CloseOuterI
         timelineItems: Option<TimelineItems>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Author {
         login: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Repository {
         url: Option<String>,
         stargazers: Option<Stargazers>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Stargazers {
         totalCount: Option<i64>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Labels {
         edges: Option<Vec<LabelEdge>>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct LabelEdge {
         node: Option<Label>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Label {
         name: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Comments {
         edges: Option<Vec<CommentEdge>>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct CommentEdge {
         node: Option<Comment>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Comment {
         author: Option<Author>,
         body: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct TimelineItems {
         edges: Option<Vec<TimelineEdge>>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct TimelineEdge {
         node: Option<ClosedEvent>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct ClosedEvent {
         stateReason: Option<String>,
         closer: Option<Closer>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Closer {
         title: Option<String>,
@@ -637,6 +673,7 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<CloseOuterI
     Ok(all_issues)
 }
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct OuterPull {
     pub title: String,
@@ -649,16 +686,19 @@ pub struct OuterPull {
 }
 
 pub async fn overall_search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>> {
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct GraphQLResponse {
         data: Data,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Data {
         search: Search,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Search {
         issueCount: i32,
@@ -666,17 +706,20 @@ pub async fn overall_search_pull_requests(query: &str) -> anyhow::Result<Vec<Out
         pageInfo: PageInfo,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct PageInfo {
         endCursor: Option<String>,
         hasNextPage: bool,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Edge {
         node: PullRequest,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct PullRequest {
         title: String,
@@ -687,41 +730,49 @@ pub async fn overall_search_pull_requests(query: &str) -> anyhow::Result<Vec<Out
         hasApprovedReview: Reviews,
         mergedBy: Option<Author>,
     }
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Repository {
         url: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Author {
         login: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Labels {
         edges: Option<Vec<LabelEdge>>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct LabelEdge {
         node: Option<Label>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Label {
         name: Option<String>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Reviews {
         edges: Option<Vec<ReviewEdge>>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct ReviewEdge {
         node: Option<Review>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Debug)]
     struct Review {
         author: Option<Author>,
@@ -842,6 +893,7 @@ pub async fn overall_search_pull_requests(query: &str) -> anyhow::Result<Vec<Out
     Ok(all_pulls)
 }
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SimplePull {
     pub title: String,
@@ -854,16 +906,19 @@ pub struct SimplePull {
 }
 
 pub async fn get_per_repo_pull_requests(query: &str) -> anyhow::Result<Vec<SimplePull>> {
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct GraphQLResponse {
         data: Data,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Data {
         search: Search,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Search {
         issueCount: i32,
@@ -871,6 +926,7 @@ pub async fn get_per_repo_pull_requests(query: &str) -> anyhow::Result<Vec<Simpl
         pageInfo: PageInfo,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Node {
         title: String,
@@ -882,47 +938,56 @@ pub async fn get_per_repo_pull_requests(query: &str) -> anyhow::Result<Vec<Simpl
         mergedBy: Option<Author>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Author {
         login: String,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct TimelineItems {
         nodes: Vec<TimelineEvent>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct TimelineEvent {
         subject: Option<Subject>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Subject {
         url: String,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Labels {
         nodes: Vec<Label>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Label {
         name: String,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Reviews {
         nodes: Vec<Review>,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct Review {
         author: Author,
         state: String,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     struct PageInfo {
         endCursor: Option<String>,

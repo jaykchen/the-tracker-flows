@@ -10,11 +10,10 @@ use http_req::{
     uri::Uri,
 };
 
+use crate::ISSUE_LABEL;
+use crate::PR_LABEL;
 use serde::{Deserialize, Serialize};
 use std::env;
-
-static ISSUE_LABEL: &str = "hacktoberfest";
-static PR_LABEL: &str = "hacktoberfest-accepted";
 
 pub fn inner_query_n_days(
     start_date: &str,

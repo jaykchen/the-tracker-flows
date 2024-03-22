@@ -79,37 +79,10 @@ pub async fn update_project(
     Ok(())
 }
 
-use async_trait::async_trait;
 use mysql_async::prelude::Queryable;
-
-#[async_trait]
-trait TestDbSetup {
-    async fn setup_db(&self);
-}
-
-#[async_trait]
-impl TestDbSetup for Pool {
-    async fn setup_db(&self) {
-        let mut conn = self.get_conn().await.unwrap();
-        conn.query_drop("CREATE DATABASE IF NOT EXISTS test_db")
-            .await
-            .unwrap();
-        conn.query_drop("USE test_db").await.unwrap();
-        conn.query_drop(
-            "CREATE TABLE IF NOT EXISTS projects (
-                    project_id VARCHAR(255) PRIMARY KEY,
-                    project_logo VARCHAR(255) NOT NULL,
-                    issues_list JSON
-                )",
-        )
-        .await
-        .unwrap();
-    }
-}
 
 pub async fn test_project_exists() {
     let pool = get_pool().await;
-    pool.setup_db().await;
     let project_id = "https://github.com/test/test13";
 
     // // Add a project
@@ -123,7 +96,6 @@ pub async fn test_project_exists() {
 
 pub async fn test_add_project() {
     let pool = get_pool().await;
-    pool.setup_db().await;
     let project_id = "https://github.com/test/test15";
 
     let issue_id = "test_issue_id";

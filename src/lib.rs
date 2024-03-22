@@ -17,6 +17,9 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use the_runner::*;
 
+pub static ISSUE_LABEL: &str = "hacktoberfest";
+pub static PR_LABEL: &str = "hacktoberfest-accepted";
+
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
 pub async fn on_deploy() {
