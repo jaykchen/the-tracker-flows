@@ -12,49 +12,6 @@ use schedule_flows::{schedule_cron_job, schedule_handler};
 use serde::{Deserialize, Serialize};
 use std::env;
 
-
-pub fn inner_query_by_date_range(
-    start_date: &str,
-    n_days: i64,
-    issue_label: &str,
-    pr_label: &str,
-    is_issue: bool,
-    is_start: bool,
-) -> Vec<String> {
-    // let start_date ="2023-10-01";
-    // let issue_label = "hacktoberfest";
-    // let pr_label = "hacktoberfest-accepted";
-    let start_date =
-        NaiveDate::parse_from_str(start_date, "%Y-%m-%d").expect("Failed to parse date");
-
-    let date_point_vec = (0..20)
-        .map(|i| {
-            (start_date + Duration::days(n_days * i as i64))
-                .format("%Y-%m-%d")
-                .to_string()
-        })
-        .collect::<Vec<_>>();
-
-    let date_range_vec = date_point_vec
-        .windows(2)
-        .map(|x| x.join(".."))
-        .collect::<Vec<_>>();
-
-    let mut out = Vec::new();
-    for date_range in date_range_vec {
-        let query = if is_issue && is_start {
-            format!("label:{issue_label} is:issue is:open no:assignee created:{date_range} -label:spam -label:invalid")
-        } else if is_issue && !is_start {
-            format!("label:{issue_label} is:issue is:closed created:{date_range} -label:spam -label:invalid")
-        } else {
-            format!("label:{pr_label} is:pr is:merged created:{date_range} review:approved -label:spam -label:invalid")
-        };
-        out.push(query);
-    }
-
-    out
-}
-
 pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
     let token = env::var("GITHUB_TOKEN").expect("github_token is required");
     let base_url = "https://api.github.com/graphql";
@@ -85,7 +42,9 @@ pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
     }
 }
 
-
+pub async fn search_issues_w_update_comments() {
+    todo!("Implement this function");
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct OuterIssue {
@@ -343,10 +302,6 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<OuterIssue>> 
     Ok(all_issues)
 }
 
-
-
-
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CloseOuterIssue {
     pub title: String,
@@ -580,7 +535,7 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<CloseOuterI
                                     .collect()
                             })
                         });
-let temp_str   = String::from("");
+                        let temp_str = String::from("");
 
                         let comments = issue.comments.map_or(Vec::new(), |comments| {
                             comments.edges.map_or(Vec::new(), |edges| {
@@ -618,10 +573,7 @@ let temp_str   = String::from("");
                                                                 .stateReason
                                                                 .clone()
                                                                 .unwrap_or_default(),
-                                                            closer
-                                                                .url
-                                                                .clone()
-                                                                .unwrap_or_default(),
+                                                            closer.url.clone().unwrap_or_default(),
                                                             closer.author.as_ref().map_or(
                                                                 String::new(),
                                                                 |author| {
@@ -684,8 +636,6 @@ let temp_str   = String::from("");
     }
     Ok(all_issues)
 }
-
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct OuterPull {
@@ -776,7 +726,7 @@ pub async fn overall_search_pull_requests(query: &str) -> anyhow::Result<Vec<Out
     struct Review {
         author: Option<Author>,
     }
-    
+
     let mut all_pulls = Vec::new();
     let mut after_cursor = None;
     for _n in 0..10 {
