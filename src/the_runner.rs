@@ -93,7 +93,7 @@ pub async fn run_hourly(start_date: &str) {
     let query = inner_query_n_days(start_date, 2, ISSUE_LABEL, PR_LABEL, is_issue, is_start);
     // let query ="label:hacktoberfest is:issue is:open created:>=2023-10-01 updated:>=2023-10-03 -label:spam -label:invalid";
 
-    let _ = search_issues_w_update_comments().await;
+    let _ = search_issues_w_update_comments(&query).await;
 }
 
 pub async fn run_daily(start_date: &str) {
@@ -117,12 +117,6 @@ pub async fn run_daily(start_date: &str) {
     // let query_pr_overall ="label:hacktoberfest-accepted is:pr is:merged created:2023-10-01..2023-10-02 review:approved -label:spam -label:invalid";
     let query_pr_overall = inner_query_n_days(start_date, 2, ISSUE_LABEL, PR_LABEL, false, false);
 
-    let _ = overall_search_pull_requests(&query_pr_overall).await;
+    let _ = search_pull_requests(&query_pr_overall).await;
 
-    // let is_issue = false;
-    // let is_start = false;
-    // let query_per_repo ="repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-03 review:approved -label:spam -label:invalid";
-    let query_per_repo = inner_query_n_days(start_date, 2, ISSUE_LABEL, PR_LABEL, false, false);
-
-    let _ = get_per_repo_pull_requests(&query_per_repo).await;
 }
