@@ -17,19 +17,6 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use the_runner::*;
 
-pub static ISSUE_LABEL: &str = "hacktoberfest";
-pub static PR_LABEL: &str = "hacktoberfest-accepted";
-pub static START_DATE: &str = "2023-10-01";
-pub static END_DATE: &str = "2023-10-30";
-
-lazy_static! {
-    static ref TODAY_PLUS_TEN_MINUTES: NaiveDateTime = Utc::now()
-        .date()
-        .naive_utc()
-        .and_time(NaiveTime::from_hms(0, 10, 0));
-    static ref TODAY_THIS_HOUR: u32 = Utc::now().hour();
-}
-
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
 pub async fn on_deploy() {
@@ -42,15 +29,14 @@ pub async fn on_deploy() {
 #[schedule_handler]
 async fn handler(body: Vec<u8>) {
     dotenv().ok();
-    let _ = inner(body).await;
 }
 
 pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     // let query = "repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-03 review:approved -label:spam -label:invalid";
     // let query = "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid";
 
-    db_updater::test_add_project().await;
-    db_updater::test_project_exists().await;
+    // db_updater::test_add_project().await;
+    // db_updater::test_project_exists().await;
 
     // let issues = search_issues_open(&query).await?;
     // let query = "repo:SarthakKeshari/calc_for_everything is:pr is:merged label:hacktoberfest-accepted created:2023-10-01..2023-10-30 review:approved -label:spam -label:invalid";
@@ -67,18 +53,24 @@ pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
     //     }
     // }
 
+    let pool = db_updater::get_pool().await;
+    let _ = run_hourly(&pool).await;
+
     Ok(())
 }
 
+pub async fn search_pulls() -> anyhow::Result<()> {
+    // let _ = upload_to_gist(&texts).await?;
+    Ok(())
+}
 pub async fn search_issue_init() -> anyhow::Result<()> {
-    let start_date = "2023-10-01";
     let issue_label = "hacktoberfest";
     let pr_label = "hacktoberfest-accepted";
     let n_days = 2;
     let is_issue = true;
     let is_start = true;
     let query_vec = inner_query_vec_by_date_range(
-        start_date,
+        START_DATE,
         n_days,
         issue_label,
         pr_label,

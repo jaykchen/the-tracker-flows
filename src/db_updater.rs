@@ -2,7 +2,7 @@ use dotenv::dotenv;
 use mysql_async::prelude::*;
 pub use mysql_async::*;
 
-async fn get_pool() -> Pool {
+pub async fn get_pool() -> Pool {
     dotenv().ok();
     let url = std::env::var("DATABASE_URL").expect("not url db url found");
 
