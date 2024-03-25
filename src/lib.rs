@@ -88,8 +88,7 @@ pub async fn search_issue_init() -> anyhow::Result<()> {
         let pulls = search_issues_open(&query).await?;
 
         for pull in pulls {
-            log::info!("pull: {:?}", pull.url);
-            texts.push_str(&format!("{}\n", pull.url));
+            log::info!("pull: {:?}", pull.issue_id);
             break;
         }
     }

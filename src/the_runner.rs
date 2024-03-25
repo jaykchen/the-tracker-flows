@@ -144,11 +144,11 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let open_issue_obj = search_issues_open(&query_open).await?;
 
     for iss in open_issue_obj {
-        let project_id = iss.repository.clone();
-        let project_logo = &iss.repository_avatar.clone();
-        let issue_id = iss.url.clone();
+        let project_id = iss.project_id.clone();
+        let project_logo = String::from("placeholder".to_string());
+        let issue_id = iss.issue_id.clone();
         if !project_exists(pool, &project_id).await? {
-            add_project(pool, &project_id, project_logo, &issue_id).await;
+            add_project(pool, &project_id, &project_logo, &issue_id).await;
         }
     }
 
