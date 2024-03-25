@@ -22,13 +22,14 @@ use the_runner::*;
 pub async fn on_deploy() {
     let now = Utc::now();
     let now_minute = now.minute() + 2;
-    let cron_time = format!("{:02} {:02} {:02} * *", now_minute, now.hour(), now.day());
+    let cron_time = format!("{:02} {:02} * * *", now_minute, now.hour());
     schedule_cron_job(cron_time, String::from("cron_job_evoked")).await;
 }
 
 #[schedule_handler]
 async fn handler(body: Vec<u8>) {
     dotenv().ok();
+    let _ = inner(body).await;
 }
 
 pub async fn inner(body: Vec<u8>) -> anyhow::Result<()> {
