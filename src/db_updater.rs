@@ -1,6 +1,7 @@
 use dotenv::dotenv;
 use mysql_async::prelude::*;
 pub use mysql_async::*;
+use serde_json::{json, Value};
 
 pub async fn get_pool() -> Pool {
     dotenv().ok();
@@ -26,24 +27,29 @@ pub async fn project_exists(pool: &mysql_async::Pool, project_id: &str) -> Resul
     Ok(result.is_some())
 }
 
-pub async fn add_project(
-    pool: &mysql_async::Pool,
-    project_id: &str,
-    project_logo: &str,
+pub async fn add_issues_open(
+    pool: &Pool,
     issue_id: &str,
+    project_id: &str,
+    issue_title: &str,
+    issue_description: &str,
+    repo_stars: i32,
+    repo_avatar: &str,
 ) -> Result<()> {
     let mut conn = pool.get_conn().await?;
-    let issue_id_json: Value = serde_json::json!(issue_id).into();
 
-    let query = r"INSERT INTO projects (project_id, project_logo, issues_list)
-                  VALUES (:project_id, :project_logo, :issues_list)";
+    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_description, repo_stars, repo_avatar)
+                  VALUES (:issue_id, :project_id, :issue_title, :issue_description, :repo_stars, :repo_avatar)";
 
     conn.exec_drop(
         query,
         params! {
+            "issue_id" => issue_id,
             "project_id" => project_id,
-            "project_logo" => project_logo,
-            "issues_list" => issue_id_json,
+            "issue_title" => issue_title,
+            "issue_description" => issue_description,
+            "repo_stars" => repo_stars,
+            "repo_avatar" => repo_avatar,
         },
     )
     .await?;
@@ -51,49 +57,91 @@ pub async fn add_project(
     Ok(())
 }
 
-pub async fn update_project(
-    pool: &mysql_async::Pool,
-    project_id: &str,
+pub async fn add_issues_closed(
+    pool: &Pool,
     issue_id: &str,
+    issue_assignees: &Vec<String>,
+    issue_linked_pr: &str,
 ) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let issue_id_json: Value = serde_json::json!(issue_id).into();
+    let issue_assignees_json: Value = json!(issue_assignees).into();
 
-    let params = params! {
-        "issue_id" => &issue_id_json,
-        "project_id" => project_id,
-    };
-    "UPDATE projects
-        SET issues_list = JSON_ARRAY_APPEND(issues_list, '$', :issue_id)
-        WHERE project_id = :project_id"
-        .with(params)
-        .run(&mut conn)
-        .await?;
+    let query = r"INSERT INTO issues_closed (issue_id,  issue_assignees, issue_linked_pr)
+                  VALUES (:issue_id, :issue_assignees, :issue_linked_pr)";
+
+    conn.exec_drop(
+        query,
+        params! {
+            "issue_id" => issue_id,
+            "issue_assignees" => &issue_assignees_json,
+            "issue_linked_pr" => issue_linked_pr,
+        },
+    )
+    .await?;
 
     Ok(())
 }
 
-pub async fn test_project_exists() {
-    let pool = get_pool().await;
-    let project_id = "https://github.com/test/test13";
+pub async fn add_issues_comments(
+    pool: &Pool,
+    issue_id: &str,
+    comments: &Vec<String>,
+) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
 
-    // // Add a project
-    // add_project(&pool, project_id, "test_logo", "test_issue_id")
-    //     .await
-    //     .unwrap();
+    // let issue_status = todo!(comments);
+    let issue_status = comments[0].clone();
 
-    // Now the project should exist
-    assert_eq!(project_exists(&pool, project_id).await.unwrap(), true);
+    let query = r"INSERT INTO issues_comments (issue_id, issue_status)
+                  VALUES (:issue_id, :issue_status)";
+
+    conn.exec_drop(
+        query,
+        params! {
+            "issue_id" => issue_id,
+            "issue_status" => issue_status,
+        },
+    )
+    .await?;
+
+    Ok(())
 }
+pub async fn add_pull_request(
+    pool: &Pool,
+    pull_id: &str,
+    title: &str,
+    author: &str,
+    project_id: &str,
+    merged_by: &str,
+    connected_issues: &Vec<String>,
+    pull_status: &str,
+) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
 
-pub async fn test_add_project() {
-    let pool = get_pool().await;
-    let project_id = "https://github.com/test/test15";
+    let connected_issues_json: Value = json!(connected_issues).into();
 
-    let issue_id = "test_issue_id";
-    let res = add_project(&pool, project_id, "test_logo", issue_id).await;
-    println!("res: {:?}", res);
-    // The project should now exist
-    assert_eq!(project_exists(&pool, project_id).await.unwrap(), true);
+    let query = r"INSERT INTO pull_requests (pull_id, title, author, project_id, merged_by, connected_issues, pull_status)
+                  VALUES (:pull_id, :title, :author, :project_id, :merged_by, :connected_issues, :pull_status)";
+
+    match conn
+        .exec_drop(
+            query,
+            params! {
+                "pull_id" => pull_id,
+                "title" => title,
+                "author" => author,
+                "project_id" => project_id,
+                "connected_issues" => &connected_issues_json,
+                "merged_by" => merged_by,
+                "pull_status" => pull_status,
+            },
+        )
+        .await
+    {
+        Ok(()) => println!("Pull request added successfully"),
+        Err(e) => println!("Error adding pull request: {:?}", e),
+    }
+
+    Ok(())
 }

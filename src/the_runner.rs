@@ -127,7 +127,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         false,
     );
     log::info!("query_comment: {:?}", query_comment);
-    let _ = search_issues_w_update_comments(&query_comment).await;
+    // let _ = search_issues_w_update_comments(&query_comment).await;
 
     // let query_open ="label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-02 -label:spam -label:invalid";
     let query_open = inner_query_1_hour(
@@ -147,9 +147,21 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         let project_id = iss.project_id.clone();
         let project_logo = String::from("placeholder".to_string());
         let issue_id = iss.issue_id.clone();
-        if !project_exists(pool, &project_id).await? {
-            add_project(pool, &project_id, &project_logo, &issue_id).await;
-        }
+        let issue_title = iss.issue_title.clone();
+        let author = "fake_author".to_string();
+        let issue_description = iss.issue_description.clone();
+        let repo_stars = 123;
+        let repo_avatar = "fake_avatar";
+        let _ = add_issues_open(
+            pool,
+            &issue_id,
+            &project_id,
+            &issue_title,
+            &issue_description,
+            repo_stars,
+            &repo_avatar,
+        )
+        .await;
     }
 
     // let query_closed =
@@ -165,7 +177,13 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         false,
     );
     log::info!("query_closed: {:?}", query_closed);
-    let _ = search_issues_closed(&query_closed).await;
+    let issue_closed_obj = search_issues_closed(&query_closed).await?;
+    for iss in issue_closed_obj {
+        let issue_id = iss.issue_id.clone();
+        let issue_assignees = iss.issue_assignees.clone();
+        let issue_linked_pr = iss.issue_linked_pr.unwrap_or_default();
+        let _ = add_issues_closed(pool, &issue_id, &issue_assignees, &issue_linked_pr).await;
+    }
 
     // let query_pr_overall ="label:hacktoberfest-accepted is:pr is:merged updated:2023-10-01..2023-10-02 review:approved -label:spam -label:invalid";
     let query_pull_request = inner_query_1_hour(
@@ -179,7 +197,28 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         false,
     );
     log::info!("query_pull_request: {:?}", query_pull_request);
-    let _ = search_pull_requests(&query_pull_request).await;
+    let pull_request_obj = search_pull_requests(&query_pull_request).await?;
+
+    for pr in pull_request_obj {
+        let pull_id = pr.pull_id.clone();
+        let pull_title = pr.title.clone();
+        let pull_author = pr.author.clone().unwrap_or_default();
+        let project_id = pr.project_id.clone();
+        let merged_by = pr.merged_by.clone().unwrap_or_default();
+        let connected_issues = pr.connected_issues.clone();
+        let pull_status = pr.pull_status.clone();
+        let _ = add_pull_request(
+            pool,
+            &pull_id,
+            &pull_title,
+            &pull_author,
+            &project_id,
+            &merged_by,
+            &connected_issues,
+            &pull_status,
+        )
+        .await;
+    }
 
     Ok(())
 }
